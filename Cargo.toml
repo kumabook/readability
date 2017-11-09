@@ -1,0 +1,11 @@
+[package]
+name = "readability"
+version = "0.1.0"
+authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
+
+[dependencies]
+regex            = "^0.2"
+url              = "^1.5"
+html5ever        = "^0.18.0"
+hyper            = "0.10.12"
+hyper-native-tls = "0.2.4"
