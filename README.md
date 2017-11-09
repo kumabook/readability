@@ -9,6 +9,16 @@ inspired by [kingwkb/readability](https://github.com/kingwkb/readability).
 Hot to use
 -------
 
+
+- Add `readability` to dependencies in Cargo.toml
+
+```toml
+[dependencies]
+readability = "^0"
+```
+
+- Then, use it as below
+
 ```rust
 
 extern crate readability;
