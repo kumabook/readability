@@ -76,32 +76,27 @@ pub fn is_candidate(handle: Handle) -> bool {
     }
 }
 
-pub fn calc_content_score(handle: Handle) -> f32 {
-    let mut score: f32 = 1.0;
+pub fn init_content_score(handle: Handle) -> f32 {
     let tag_name = dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
-    score += match tag_name.as_ref() {
+    match tag_name.as_ref() {
+        "article"    => 10.0,
         "div"        => 5.0,
         "blockquote" => 3.0,
         "form"       => -3.0,
         "th"         => 5.0,
         _            => 0.0,
-    };
-
-    score += get_class_weight(handle.clone());
-
-    for child in handle.children.borrow().iter() {
-        let c = child.clone();
-        match c.data {
-            Text { ref contents } => {
-                let re = Regex::new(PUNCTUATIONS).unwrap();
-                let s = contents.borrow();
-                let mat = re.find_iter(&s.trim());
-                score += mat.count() as f32;
-                score += f32::min(f32::floor(s.trim().len() as f32 / 100.0), 3.0);
-            },
-            _ => ()
-        }
     }
+}
+
+pub fn calc_content_score(handle: Handle) -> f32 {
+    let mut score: f32 = 1.0;
+    score += get_class_weight(handle.clone());
+    let mut text = String::new();
+    dom::extract_text(handle.clone(), &mut text, true);
+    let re = Regex::new(PUNCTUATIONS).unwrap();
+    let mat = re.find_iter(&text);
+    score += mat.count() as f32;
+    score += f32::min(f32::floor(text.chars().count() as f32 / 100.0), 3.0);
     return score
 }
 
@@ -126,23 +121,30 @@ pub fn get_class_weight(handle: Handle) -> f32 {
 }
 
 pub fn find_candidates(mut dom:    &mut RcDom,
-                   id:         &Path,
-                   handle:     Handle,
-                   candidates: &mut BTreeMap<String, Candidate>) {
+                       id:         &Path,
+                       handle:     Handle,
+                       candidates: &mut BTreeMap<String, Candidate>,
+                       nodes:      &mut BTreeMap<String, Rc<Node>>) {
 
-    let tag_name: &str = &dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
-    match tag_name {
-        "div" | "center" | "td" | "p" |
-        "article" | "section" | "nav" => {
-            if let Some(id) = id.to_str().map(|id| id.to_string()) {
-                candidates.insert(id, Candidate {
-                    node:  handle.clone(),
-                    score: Cell::new(0.0),
-                });
-            }
-        },
-        _ => (),
+    if let Some(id) = id.to_str().map(|id| id.to_string()) {
+        nodes.insert(id, handle.clone());
     }
+
+    if is_candidate(handle.clone()) {
+        let score = calc_content_score(handle.clone());
+        if let Some(c) = id.parent()
+            .and_then(|id| find_or_create_candidate(id, candidates, nodes))
+        {
+            c.score.set(c.score.get() + score)
+        }
+        if let Some(c) = id.parent()
+            .and_then(|id| id.parent())
+            .and_then(|id| find_or_create_candidate(id, candidates, nodes))
+        {
+            c.score.set(c.score.get() + score / 2.0)
+        }
+    }
+
 
     if is_candidate(handle.clone()) {
         let score = calc_content_score(handle.clone());
@@ -170,8 +172,29 @@ pub fn find_candidates(mut dom:    &mut RcDom,
         find_candidates(&mut dom,
                         id.join(i.to_string()).as_path(),
                         child.clone(),
-                        candidates)
+                        candidates,
+                        nodes)
     }
+}
+
+fn find_or_create_candidate<'a>(id: &Path,
+                                candidates: &'a mut BTreeMap<String, Candidate>,
+                                nodes: &BTreeMap<String, Rc<Node>>) -> Option<&'a Candidate> {
+    if let Some(id) = id.parent()
+        .and_then(|pid| pid.to_str())
+        .map(|id| id.to_string())
+    {
+        if let Some(node) = nodes.get(&id) {
+            if candidates.get(&id).is_none() {
+                candidates.insert(id.clone(), Candidate {
+                    node:  node.clone(),
+                    score: Cell::new(init_content_score(node.clone())),
+                });
+            }
+            return candidates.get(&id)
+        }
+    }
+    None
 }
 
 pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidates: &BTreeMap<String, Candidate>) -> bool {

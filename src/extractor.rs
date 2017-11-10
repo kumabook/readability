@@ -45,8 +45,9 @@ pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: R
         .read_from(input)
         .unwrap();
     let mut candidates = BTreeMap::new();
+    let mut nodes      = BTreeMap::new();
     let handle = dom.document.clone();
-    scorer::find_candidates(&mut dom, Path::new("/"), handle.clone(), &mut candidates);
+    scorer::find_candidates(&mut dom, Path::new("/"), handle.clone(), &mut candidates, &mut nodes);
     let mut id: &str = "/";
     let mut top_candidate: &Candidate = &Candidate {
         node:  handle.clone(),
