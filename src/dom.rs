@@ -150,13 +150,15 @@ pub fn find_node(handle: Handle, tag_name: &str, nodes: &mut Vec<Rc<Node>>) {
 }
 
 pub fn has_nodes(handle: Handle, tag_names: &Vec<&'static str>) -> bool {
-    let tag_name: &str = &get_tag_name(handle.clone()).unwrap_or("".to_string());
-    if tag_names.iter().any(|&n| n == tag_name) {
-        return true
-    }
     for child in handle.children.borrow().iter() {
+        let tag_name: &str = &get_tag_name(child.clone()).unwrap_or("".to_string());
+        if tag_names.iter().any(|&n| n == tag_name) {
+            return true
+        }
         if match child.clone().data {
-            Element { .. } => has_nodes(child.clone(), tag_names),
+            Element { .. } => {
+                has_nodes(child.clone(), tag_names)
+            },
             _ => false,
         } {
             return true
