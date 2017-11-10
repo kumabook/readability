@@ -63,8 +63,12 @@ pub fn get_link_density(handle: Handle) -> f32 {
 }
 
 pub fn is_candidate(handle: Handle) -> bool {
-    let tag_name: &str = &dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
-    match tag_name {
+    let text_len = dom::text_len(handle.clone());
+    if text_len < 20 {
+        return false
+    }
+    let n: &str = &dom::get_tag_name(handle. clone()).unwrap_or("".to_string());
+    match n {
         "p" => true,
         "div" | "article" | "center"=>
             !dom::has_nodes(handle.clone(), &TAGS.iter().map(|t| *t).collect()),
