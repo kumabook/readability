@@ -70,7 +70,7 @@ pub fn is_candidate(handle: Handle) -> bool {
     let n: &str = &dom::get_tag_name(handle. clone()).unwrap_or("".to_string());
     match n {
         "p" => true,
-        "div" | "article" | "center"=>
+        "div" | "article" | "center" | "section" =>
             !dom::has_nodes(handle.clone(), &TAGS.iter().map(|t| *t).collect()),
         _ => false
     }
