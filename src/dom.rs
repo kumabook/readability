@@ -122,7 +122,7 @@ pub fn text_len(handle: Handle) -> usize {
         let c = child.clone();
         match c.data {
             Text { ref contents } => {
-                len += contents.borrow().trim().len();
+                len += contents.borrow().trim().chars().count();
             },
             Element { .. } => {
                 len += text_len(child.clone());
