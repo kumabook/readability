@@ -17,7 +17,6 @@ use html5ever::rcdom::NodeData::{
 use html5ever::rcdom::RcDom;
 use dom;
 
-//const PUNCTUATION_WEIGHT: f32 = 10.0;
 pub static PUNCTUATIONS: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
 pub static POSITIVE: &'static str = "article|body|content|entry|hentry|main|page\
                                      |pagination|post|text|blog|story";
