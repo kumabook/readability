@@ -24,7 +24,7 @@ pub static NEGATIVE: &'static str = "combx|comment|com|contact|foot|footer|footn
                                      |masthead|media|meta|outbrain|promo|related\
                                      |scroll|shoutbox|sidebar|sponsor|shopping\
                                      |tags|tool|widget";
-static TAGS: [&'static str; 10]  = [
+static BLOCK_CHILD_TAGS: [&'static str; 10] = [
     "a", "blockquote", "dl", "div", "img", "ol", "p", "pre", "table", "ul",
 ];
 
@@ -71,7 +71,7 @@ pub fn is_candidate(handle: Handle) -> bool {
     match n {
         "p" => true,
         "div" | "article" | "center" | "section" =>
-            !dom::has_nodes(handle.clone(), &TAGS.iter().map(|t| *t).collect()),
+            !dom::has_nodes(handle.clone(), &BLOCK_CHILD_TAGS.iter().map(|t| *t).collect()),
         _ => false
     }
 }
