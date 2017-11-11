@@ -23,7 +23,7 @@ pub static POSITIVE: &'static str = "article|body|content|entry|hentry|main|page
 pub static NEGATIVE: &'static str = "combx|comment|com|contact|foot|footer|footnote\
                                      |masthead|media|meta|outbrain|promo|related\
                                      |scroll|shoutbox|sidebar|sponsor|shopping\
-                                     |tags|tool|widget";
+                                     |tags|tool|widget|form|textfield";
 static BLOCK_CHILD_TAGS: [&'static str; 10] = [
     "a", "blockquote", "dl", "div", "img", "ol", "p", "pre", "table", "ul",
 ];
