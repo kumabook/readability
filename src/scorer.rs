@@ -216,8 +216,7 @@ pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidat
                     | "h1" | "object" | "header" | "footer" | "aside" => {
                     useless = true
                 },
-                "form" | "table" | "ul" | "div" | "center"
-                   | "article" | "section" => {
+                "form" | "table" | "ul" | "div" => {
                     useless = is_useless(id, handle.clone(), candidates)
                 },
                 "img" => useless = fix_img_path(handle.clone(), url),
@@ -230,8 +229,9 @@ pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidat
         ProcessingInstruction { .. } => unreachable!()
     }
     let mut useless_nodes = vec![];
-    for child in handle.children.borrow().iter() {
-        if clean(&mut dom, id, child.clone(), url, candidates) {
+    for (i, child) in handle.children.borrow().iter().enumerate() {
+        let pid = id.join(i.to_string());
+        if clean(&mut dom, pid.as_path(), child.clone(), url, candidates) {
             useless_nodes.push(child.clone());
         }
     }
