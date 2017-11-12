@@ -19,16 +19,31 @@ use html5ever::{QualName, LocalName};
 use html5ever::tree_builder::{NodeOrText, ElementFlags};
 use dom;
 
-pub static PUNCTUATIONS: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
-pub static POSITIVE: &'static str = "article|body|content|entry|hentry|main|page\
-                                     |pagination|post|text|blog|story";
-pub static NEGATIVE: &'static str = "combx|comment|com|contact|foot|footer|footnote\
-                                     |masthead|media|meta|outbrain|promo|related\
-                                     |scroll|shoutbox|sidebar|sponsor|shopping\
-                                     |tags|tool|widget|form|textfield";
+pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
+pub static UNLIKELY_CANDIDATES: &'static str =
+    "combx|comment|community|disqus|extra|foot|header|menu\
+     |remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate\
+     |pagination|pager|popup|tweet|twitter";
+pub static LIKELY_CANDIDATES: &'static str = "and|article|body|column|main|shadow";
+pub static POSITIVE_CANDIDATES: &'static str =
+    "article|body|content|entry|hentry|main|page\
+     |pagination|post|text|blog|story";
+pub static NEGATIVE_CANDIDATES: &'static str =
+    "combx|comment|com|contact|foot|footer|footnote\
+     |masthead|media|meta|outbrain|promo|related\
+     |scroll|shoutbox|sidebar|sponsor|shopping\
+     |tags|tool|widget|form|textfield\
+     |uiScale";// medium
 static BLOCK_CHILD_TAGS: [&'static str; 10] = [
     "a", "blockquote", "dl", "div", "img", "ol", "p", "pre", "table", "ul",
 ];
+lazy_static! {
+    static ref PUNCTUATIONS: Regex = Regex::new(PUNCTUATIONS_REGEX).unwrap();
+    static ref LIKELY:       Regex = Regex::new(LIKELY_CANDIDATES).unwrap();
+    static ref UNLIKELY:     Regex = Regex::new(UNLIKELY_CANDIDATES).unwrap();
+    static ref POSITIVE:     Regex = Regex::new(POSITIVE_CANDIDATES).unwrap();
+    static ref NEGATIVE:     Regex = Regex::new(NEGATIVE_CANDIDATES).unwrap();
+}
 
 pub struct Candidate {
     pub node:  Rc<Node>,
@@ -95,8 +110,7 @@ pub fn calc_content_score(handle: Handle) -> f32 {
     let mut score: f32 = 1.0;
     let mut text = String::new();
     dom::extract_text(handle.clone(), &mut text, true);
-    let re = Regex::new(PUNCTUATIONS).unwrap();
-    let mat = re.find_iter(&text);
+    let mat = PUNCTUATIONS.find_iter(&text);
     score += mat.count() as f32;
     score += f32::min(f32::floor(text.chars().count() as f32 / 100.0), 3.0);
     return score
@@ -106,12 +120,12 @@ pub fn get_class_weight(handle: Handle) -> f32 {
     let mut weight: f32 = 0.0;
     match handle.data {
         Element { name: _, ref attrs, .. } => {
-            for prop in ["id", "class"].iter() {
-                if let Some(class) = dom::attr(prop, &attrs.borrow()) {
-                    if Regex::new(POSITIVE).unwrap().is_match(&class) {
+            for name in ["id", "class"].iter() {
+                if let Some(val) = dom::attr(name, &attrs.borrow()) {
+                    if POSITIVE.is_match(&val) {
                         weight += 25.0
                     };
-                    if Regex::new(NEGATIVE).unwrap().is_match(&class) {
+                    if NEGATIVE.is_match(&val) {
                         weight -= 25.0
                     }
                 }
@@ -124,13 +138,22 @@ pub fn get_class_weight(handle: Handle) -> f32 {
 
 pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
     match handle.clone().data {
-        Element { ref name, .. } => {
+        Element { ref name, ref attrs, .. } => {
             let tag_name = name.local.as_ref();
             match tag_name.to_lowercase().as_ref() {
                 "script" | "link" | "style"  => {
                     return true
                 },
                 _     => (),
+            }
+            for name in ["id", "class"].iter() {
+                if let Some(val) = dom::attr(name, &attrs.borrow()) {
+                    if tag_name != "body" && UNLIKELY.is_match(&val) {
+                        if !LIKELY.is_match(&val) {
+                            return true
+                        }
+                    }
+                }
             }
         },
         _ => (),
