@@ -166,3 +166,20 @@ pub fn has_nodes(handle: Handle, tag_names: &Vec<&'static str>) -> bool {
     }
     return false
 }
+
+pub fn text_children_count(handle: Handle) -> usize {
+    let mut count = 0;
+    for child in handle.children.borrow().iter() {
+        let c = child.clone();
+        match c.data {
+            Text { ref contents } => {
+                let s = contents.borrow();
+                if s.trim().len() >= 20 {
+                    count += 1
+                }
+            },
+            _ => ()
+        }
+    }
+    count
+}

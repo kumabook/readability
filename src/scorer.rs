@@ -311,6 +311,7 @@ pub fn is_useless(id: &Path, handle: Handle, candidates: &BTreeMap<String, Candi
     if weight + score < 0.0 {
         return true
     }
+    let text_nodes_len = dom::text_children_count(handle.clone());
     let mut p_nodes:     Vec<Rc<Node>> = vec![];
     let mut img_nodes:   Vec<Rc<Node>> = vec![];
     let mut li_nodes:    Vec<Rc<Node>> = vec![];
@@ -328,14 +329,15 @@ pub fn is_useless(id: &Path, handle: Handle, candidates: &BTreeMap<String, Candi
     let embed_count    = embed_nodes.len();
     let link_density   = get_link_density(handle.clone());
     let content_length = dom::text_len(handle.clone());
+    let para_count = text_nodes_len + p_count;
 
-    if img_count > p_count {
+    if img_count > para_count + text_nodes_len {
         return true
     }
-    if li_count > p_count as i32 && tag_name != "ul" && tag_name != "ol" {
+    if li_count > para_count as i32 && tag_name != "ul" && tag_name != "ol" {
         return true
     }
-    if input_count as f32 > f32::floor(p_count as f32 / 3.0) {
+    if input_count as f32 > f32::floor(para_count as f32 / 3.0) {
         return true
     }
     if content_length < 25 && (img_count == 0 || img_count > 2) {
