@@ -1,5 +1,6 @@
 extern crate hyper;
 extern crate hyper_native_tls;
+#[macro_use]
 extern crate html5ever;
 extern crate regex;
 extern crate url;

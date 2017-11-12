@@ -14,7 +14,9 @@ use html5ever::rcdom::NodeData::{
     Comment,
     ProcessingInstruction
 };
-use html5ever::rcdom::RcDom;
+use html5ever:: rcdom::RcDom;
+use html5ever::{QualName, LocalName};
+use html5ever::tree_builder::{NodeOrText, ElementFlags};
 use dom;
 
 pub static PUNCTUATIONS: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
@@ -134,13 +136,47 @@ pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
         _ => (),
     }
     let mut useless_nodes = vec![];
+    let mut paragraph_nodes = vec![];
+    let mut br_count = 0;
     for child in handle.children.borrow().iter() {
         if preprocess(&mut dom, child.clone()) {
             useless_nodes.push(child.clone());
         }
+        let c = child.clone();
+        match c.data {
+            Element { ref name, .. } => {
+                let tag_name = name.local.as_ref();
+                if "br" == tag_name.to_lowercase() {
+                    br_count += 1
+                } else {
+                    br_count = 0
+                }
+            },
+            Text { ref contents } => {
+                let s = contents.borrow();
+                if br_count >= 2 && s.trim().len() > 0 {
+                    paragraph_nodes.push(child.clone());
+                    br_count = 0
+                }
+            },
+            _ => ()
+        }
     }
     for node in useless_nodes.iter() {
         dom.remove_from_parent(node);
+    }
+    for node in paragraph_nodes.iter() {
+        let name = QualName::new(None, ns!(), LocalName::from("p"));
+        let p = dom.create_element(name, vec![], ElementFlags::default());
+        dom.append_before_sibling(node, NodeOrText::AppendNode(p.clone()));
+        dom.remove_from_parent(node);
+        match node.clone().data {
+            Text { ref contents } => {
+                let text = contents.clone().into_inner().clone();
+                dom.append(&p, NodeOrText::AppendText(text))
+            },
+            _ => (),
+        }
     }
     false
 }
