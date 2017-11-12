@@ -120,6 +120,31 @@ pub fn get_class_weight(handle: Handle) -> f32 {
     weight
 }
 
+pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
+    match handle.clone().data {
+        Element { ref name, .. } => {
+            let tag_name = name.local.as_ref();
+            match tag_name.to_lowercase().as_ref() {
+                "script" | "link" | "style"  => {
+                    return true
+                },
+                _     => (),
+            }
+        },
+        _ => (),
+    }
+    let mut useless_nodes = vec![];
+    for child in handle.children.borrow().iter() {
+        if preprocess(&mut dom, child.clone()) {
+            useless_nodes.push(child.clone());
+        }
+    }
+    for node in useless_nodes.iter() {
+        dom.remove_from_parent(node);
+    }
+    false
+}
+
 pub fn find_candidates(mut dom:    &mut RcDom,
                        id:         &Path,
                        handle:     Handle,
