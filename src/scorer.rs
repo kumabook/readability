@@ -78,19 +78,19 @@ pub fn is_candidate(handle: Handle) -> bool {
 
 pub fn init_content_score(handle: Handle) -> f32 {
     let tag_name = dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
-    match tag_name.as_ref() {
+    let score = match tag_name.as_ref() {
         "article"    => 10.0,
         "div"        => 5.0,
         "blockquote" => 3.0,
         "form"       => -3.0,
         "th"         => 5.0,
         _            => 0.0,
-    }
+    };
+    score + get_class_weight(handle.clone())
 }
 
 pub fn calc_content_score(handle: Handle) -> f32 {
     let mut score: f32 = 1.0;
-    score += get_class_weight(handle.clone());
     let mut text = String::new();
     dom::extract_text(handle.clone(), &mut text, true);
     let re = Regex::new(PUNCTUATIONS).unwrap();
