@@ -158,13 +158,13 @@ pub fn find_candidates(mut dom:    &mut RcDom,
     if is_candidate(handle.clone()) {
         let score = calc_content_score(handle.clone());
         if let Some(c) = id.parent()
-            .and_then(|id| find_or_create_candidate(id, candidates, nodes))
+            .and_then(|pid| find_or_create_candidate(pid, candidates, nodes))
         {
             c.score.set(c.score.get() + score)
         }
         if let Some(c) = id.parent()
-            .and_then(|id| id.parent())
-            .and_then(|id| find_or_create_candidate(id, candidates, nodes))
+            .and_then(|pid| pid.parent())
+            .and_then(|gpid| find_or_create_candidate(gpid, candidates, nodes))
         {
             c.score.set(c.score.get() + score / 2.0)
         }
