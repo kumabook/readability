@@ -180,10 +180,7 @@ pub fn find_candidates(mut dom:    &mut RcDom,
 fn find_or_create_candidate<'a>(id: &Path,
                                 candidates: &'a mut BTreeMap<String, Candidate>,
                                 nodes: &BTreeMap<String, Rc<Node>>) -> Option<&'a Candidate> {
-    if let Some(id) = id.parent()
-        .and_then(|pid| pid.to_str())
-        .map(|id| id.to_string())
-    {
+    if let Some(id) = id.to_str().map(|id| id.to_string()) {
         if let Some(node) = nodes.get(&id) {
             if candidates.get(&id).is_none() {
                 candidates.insert(id.clone(), Candidate {
