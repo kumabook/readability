@@ -1,6 +1,6 @@
 [package]
 name = "readability"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
 license = "MIT"
 homepage = "https://github.com/kumabook/readability"
