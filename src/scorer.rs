@@ -23,8 +23,10 @@ pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z
 pub static UNLIKELY_CANDIDATES: &'static str =
     "combx|comment|community|disqus|extra|foot|header|menu\
      |remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate\
-     |pagination|pager|popup|tweet|twitter";
-pub static LIKELY_CANDIDATES: &'static str = "and|article|body|column|main|shadow";
+     |pagination|pager|popup|tweet|twitter\
+     |ssba";
+pub static LIKELY_CANDIDATES: &'static str = "and|article|body|column|main|shadow\
+                                              |content|hentry";
 pub static POSITIVE_CANDIDATES: &'static str =
     "article|body|content|entry|hentry|main|page\
      |pagination|post|text|blog|story";
@@ -33,7 +35,7 @@ pub static NEGATIVE_CANDIDATES: &'static str =
      |masthead|media|meta|outbrain|promo|related\
      |scroll|shoutbox|sidebar|sponsor|shopping\
      |tags|tool|widget|form|textfield\
-     |uiScale";// medium
+     |uiScale|hidden";
 static BLOCK_CHILD_TAGS: [&'static str; 10] = [
     "a", "blockquote", "dl", "div", "img", "ol", "p", "pre", "table", "ul",
 ];
