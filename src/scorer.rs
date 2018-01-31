@@ -86,7 +86,7 @@ pub fn is_candidate(handle: Handle) -> bool {
     if text_len < 20 {
         return false
     }
-    let n: &str = &dom::get_tag_name(handle. clone()).unwrap_or("".to_string());
+    let n: &str = &dom::get_tag_name(handle. clone()).unwrap_or_default();
     match n {
         "p" => true,
         "div" | "article" | "center" | "section" =>
@@ -96,7 +96,7 @@ pub fn is_candidate(handle: Handle) -> bool {
 }
 
 pub fn init_content_score(handle: Handle) -> f32 {
-    let tag_name = dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
+    let tag_name = dom::get_tag_name(handle.clone()).unwrap_or_default();
     let score = match tag_name.as_ref() {
         "article"    => 10.0,
         "div"        => 5.0,
@@ -328,7 +328,7 @@ pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidat
 }
 
 pub fn is_useless(id: &Path, handle: Handle, candidates: &BTreeMap<String, Candidate>) -> bool {
-    let tag_name = &dom::get_tag_name(handle.clone()).unwrap_or("".to_string());
+    let tag_name = &dom::get_tag_name(handle.clone()).unwrap_or_default();
     let weight = get_class_weight(handle.clone());
     let score = id.to_str()
         .and_then(|id| candidates.get(id))
