@@ -70,7 +70,7 @@ pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: R
     scorer::clean(&mut dom, Path::new(id), node.clone(), url, &candidates);
 
     serialize(&mut bytes, &node, Default::default()).ok();
-    let content = String::from_utf8(bytes).unwrap_or("".to_string());
+    let content = String::from_utf8(bytes).unwrap_or_default();
 
     let mut text: String = String::new();
     dom::extract_text(node.clone(), &mut text, true);

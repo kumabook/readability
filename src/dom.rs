@@ -81,14 +81,14 @@ pub fn is_empty(handle: Handle) -> bool {
             _ => ()
         }
     }
-    match get_tag_name(handle.clone()).unwrap_or("".to_string()).as_ref() {
+    match get_tag_name(handle.clone()).unwrap_or_default().as_ref() {
         "li" | "dt" | "dd" | "p" | "div" | "canvas" => true,
         _ => false,
     }
 }
 
 pub fn has_link(handle: Handle) -> bool {
-    if "a" == &get_tag_name(handle.clone()).unwrap_or("".to_string()) {
+    if "a" == &get_tag_name(handle.clone()).unwrap_or_default() {
         return true
     }
     for child in handle.children.borrow().iter() {
@@ -151,7 +151,7 @@ pub fn find_node(handle: Handle, tag_name: &str, nodes: &mut Vec<Rc<Node>>) {
 
 pub fn has_nodes(handle: Handle, tag_names: &Vec<&'static str>) -> bool {
     for child in handle.children.borrow().iter() {
-        let tag_name: &str = &get_tag_name(child.clone()).unwrap_or("".to_string());
+        let tag_name: &str = &get_tag_name(child.clone()).unwrap_or_default();
         if tag_names.iter().any(|&n| n == tag_name) {
             return true
         }
