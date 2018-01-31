@@ -14,6 +14,5 @@ categories = []
 regex            = "^0.2"
 url              = "1.6"
 html5ever        = "^0.22.0"
-hyper            = "0.10"
-hyper-native-tls = "0.2"
 lazy_static      = "1.0"
+reqwest          = "0.8"

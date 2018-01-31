@@ -1,5 +1,4 @@
-extern crate hyper;
-extern crate hyper_native_tls;
+extern crate reqwest;
 #[macro_use]
 extern crate html5ever;
 extern crate regex;
