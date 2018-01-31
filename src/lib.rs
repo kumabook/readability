@@ -11,11 +11,3 @@ pub mod extractor;
 pub mod scorer;
 pub mod dom;
 pub mod error;
-
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
