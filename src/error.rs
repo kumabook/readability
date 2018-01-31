@@ -1,11 +1,11 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::error;
-use hyper;
+use reqwest;
 use url;
 
 #[derive(Debug)]
 pub enum Error {
-    NetworkError(hyper::Error),
+    NetworkError(reqwest::Error),
     UrlParseError(url::ParseError),
     Unexpected,
 }
@@ -26,8 +26,8 @@ impl From<url::ParseError> for Error {
     }
 }
 
-impl From<hyper::Error> for Error {
-    fn from(err: hyper::Error) -> Error {
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Error {
         Error::NetworkError(err)
     }
 }

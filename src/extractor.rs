@@ -7,11 +7,7 @@ use html5ever::rcdom::{RcDom};
 use html5ever::{parse_document, serialize};
 use html5ever::tendril::stream::TendrilSink;
 use std::default::Default;
-use hyper::Client;
-use hyper::header::Connection;
-use hyper::header::ConnectionOption;
-use hyper::net::HttpsConnector;
-use hyper_native_tls::NativeTlsClient;
+use reqwest;
 use url::Url;
 use error::Error;
 use dom;
@@ -25,14 +21,12 @@ pub struct Product {
 }
 
 pub fn scrape(url: &str) -> Result<Product, Error> {
-    let tls        = NativeTlsClient::new().unwrap();
-    let connector  = HttpsConnector::new(tls);
-    let mut client = Client::with_connector(connector);
-    client.set_read_timeout(Some(Duration::new(30, 0)));
+    let client = reqwest::Client::builder()
+        .timeout(Duration::new(30, 0))
+        .build()?;
     let mut res = client.get(url)
-        .header(Connection(vec![ConnectionOption::Close]))
         .send()?;
-    if res.status.is_success() {
+    if res.status().is_success() {
         let url = Url::parse(url)?;
         extract(&mut res, &url)
     } else {
