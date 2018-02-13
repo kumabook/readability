@@ -302,7 +302,7 @@ pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidat
                 "form" | "table" | "ul" | "div" => {
                     useless = is_useless(id, handle.clone(), candidates)
                 },
-                "img" => useless = fix_img_path(handle.clone(), url),
+                "img" => useless = !fix_img_path(handle.clone(), url),
                 _     => (),
             }
             dom::clean_attr("id"   , &mut *attrs.borrow_mut());
