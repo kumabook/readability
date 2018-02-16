@@ -138,7 +138,7 @@ pub fn get_class_weight(handle: Handle) -> f32 {
     weight
 }
 
-pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
+pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -> bool {
     match handle.clone().data {
         Element { ref name, ref attrs, .. } => {
             let tag_name = name.local.as_ref();
@@ -146,6 +146,7 @@ pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
                 "script" | "link" | "style"  => {
                     return true
                 },
+                "title" => dom::extract_text(handle.clone(), &mut title, true),
                 _     => (),
             }
             for name in ["id", "class"].iter() {
@@ -164,7 +165,7 @@ pub fn preprocess(mut dom: &mut RcDom,  handle: Handle) -> bool {
     let mut paragraph_nodes = vec![];
     let mut br_count = 0;
     for child in handle.children.borrow().iter() {
-        if preprocess(&mut dom, child.clone()) {
+        if preprocess(&mut dom, child.clone(), &mut title) {
             useless_nodes.push(child.clone());
         }
         let c = child.clone();

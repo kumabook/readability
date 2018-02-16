@@ -18,6 +18,7 @@ use scorer::Candidate;
 
 #[derive(Debug)]
 pub struct Product {
+    pub title:     String,
     pub content:   String,
     pub text:      String,
 }
@@ -42,10 +43,11 @@ pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: R
         .from_utf8()
         .read_from(input)
         .unwrap();
+    let mut title      = String::new();
     let mut candidates = BTreeMap::new();
     let mut nodes      = BTreeMap::new();
     let handle = dom.document.clone();
-    scorer::preprocess(&mut dom, handle.clone());
+    scorer::preprocess(&mut dom, handle.clone(), &mut title);
     scorer::find_candidates(&mut dom, Path::new("/"), handle.clone(), &mut candidates, &mut nodes);
     let mut id: &str = "/";
     let mut top_candidate: &Candidate = &Candidate {
@@ -71,5 +73,5 @@ pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: R
 
     let mut text: String = String::new();
     dom::extract_text(node.clone(), &mut text, true);
-    Ok(Product { content: content, text: text })
+    Ok(Product { title: title, content: content, text: text })
 }
