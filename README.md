@@ -1,6 +1,8 @@
 readability-rs
 =============
 
+[![Build Status](https://travis-ci.org/kumabook/readability.svg?branch=master)](https://travis-ci.org/kumabook/readability)
+
 readability-rs is a library for extracting the primary readable content of a webpage.
 This is a rust port of arc90's readability project.
 inspired by [kingwkb/readability](https://github.com/kingwkb/readability).
