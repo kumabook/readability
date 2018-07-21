@@ -32,7 +32,7 @@ fn main() {
           println!("------- html ------");
           println!("{}", product.content);
           println!("---- plain text ---");
-          println!("{}", product.content);
+          println!("{}", product.text);
       },
       Err(_) => println!("error occured"),
   }
