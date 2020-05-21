@@ -8,15 +8,16 @@ repository = "https://github.com/kumabook/readability.git"
 description = "Port of arc90's readability project to rust"
 keywords = ["readability"]
 categories = []
+edition = "2018"
 
 [dependencies]
 regex            = "1"
-url              = "1"
-html5ever        = "0.22"
-lazy_static      = "1.0"
+url              = "2.1"
+html5ever        = "0.24"
+lazy_static      = "1.4"
 
 [dependencies.reqwest]
-version = "0.9"
+version = "0.10"
 optional = true
 
 [features]

@@ -17,7 +17,7 @@ use html5ever::rcdom::NodeData::{
 use html5ever:: rcdom::RcDom;
 use html5ever::{QualName, LocalName};
 use html5ever::tree_builder::{NodeOrText, ElementFlags};
-use dom;
+use crate::dom;
 
 pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
 pub static UNLIKELY_CANDIDATES: &'static str =

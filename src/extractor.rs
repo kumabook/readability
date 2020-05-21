@@ -9,12 +9,13 @@ use std::default::Default;
 #[cfg(feature = "reqwest")]
 use std::time::Duration;
 #[cfg(feature = "reqwest")]
-use reqwest;
+use reqwest::Client;
 use url::Url;
-use error::Error;
-use dom;
-use scorer;
 use scorer::Candidate;
+use crate::error::Error;
+use crate::dom;
+use crate::scorer;
+
 
 #[derive(Debug)]
 pub struct Product {
@@ -24,15 +25,21 @@ pub struct Product {
 }
 
 #[cfg(feature = "reqwest")]
-pub fn scrape(url: &str) -> Result<Product, Error> {
-    let client = reqwest::Client::builder()
+pub async fn scrape(url: &str) -> Result<Product, Error> {
+    let client = Client::builder()
         .timeout(Duration::new(30, 0))
         .build()?;
-    let mut res = client.get(url)
-        .send()?;
+    scrape_with_client(url, &client).await
+}
+
+#[cfg(feature = "reqwest")]
+pub async fn scrape_with_client(url: &str, client: &Client) -> Result<Product, Error> {
+    let res = client.get(url)
+        .send()
+        .await?;
     if res.status().is_success() {
         let url = Url::parse(url)?;
-        extract(&mut res, &url)
+        extract(&mut res.text().await?.as_bytes(), &url)
     } else {
         Err(Error::Unexpected)
     }
