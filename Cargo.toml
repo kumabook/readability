@@ -1,11 +1,11 @@
 [package]
-name = "readability"
-version = "0.1.4"
+name = "readability-fork"
+version = "0.2.0"
 authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
 license = "MIT"
-homepage = "https://github.com/kumabook/readability"
-repository = "https://github.com/kumabook/readability.git"
-description = "Port of arc90's readability project to rust"
+homepage = "https://github.com/jangernert/readability"
+repository = "https://github.com/jangernert/readability.git"
+description = "Temporary fork of 'readability' crate with updated dependencies"
 keywords = ["readability"]
 categories = []
 edition = "2018"
