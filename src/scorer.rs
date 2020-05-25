@@ -4,6 +4,7 @@ use std::cell::Cell;
 use std::collections::BTreeMap;
 use url::Url;
 use regex::Regex;
+use lazy_static::lazy_static;
 use html5ever::tree_builder::TreeSink;
 use html5ever::rcdom::Node;
 use html5ever::rcdom::NodeData::{Element, Text};
@@ -17,6 +18,7 @@ use html5ever::rcdom::NodeData::{
 use html5ever:: rcdom::RcDom;
 use html5ever::{QualName, LocalName};
 use html5ever::tree_builder::{NodeOrText, ElementFlags};
+use html5ever::{ns, namespace_url};
 use crate::dom;
 
 pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";

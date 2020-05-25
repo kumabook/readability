@@ -23,7 +23,6 @@ readability = "^0"
 
 ```rust
 
-extern crate readability;
 use readability::extractor;
 
 fn main() {
