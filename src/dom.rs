@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use html5ever::tendril::StrTendril;
-use html5ever::rcdom::NodeData::{Element, Text};
-use html5ever::rcdom::{Handle, Node};
+use markup5ever_rcdom::NodeData::{Element, Text};
+use markup5ever_rcdom::{Handle, Node};
 use html5ever::Attribute;
 use std::str::FromStr;
 

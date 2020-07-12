@@ -2,7 +2,7 @@ use std::io::Read;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::cell::Cell;
-use html5ever::rcdom::{RcDom};
+use markup5ever_rcdom::{RcDom, SerializableHandle};
 use html5ever::{parse_document, serialize};
 use html5ever::tendril::stream::TendrilSink;
 use std::default::Default;
@@ -25,7 +25,7 @@ pub struct Product {
 
 #[cfg(feature = "reqwest")]
 pub fn scrape(url: &str) -> Result<Product, Error> {
-    let client = reqwest::Client::builder()
+    let client = reqwest::blocking::Client::builder()
         .timeout(Duration::new(30, 0))
         .build()?;
     let mut res = client.get(url)
@@ -68,7 +68,7 @@ pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: R
     let node = top_candidate.node.clone();
     scorer::clean(&mut dom, Path::new(id), node.clone(), url, &candidates);
 
-    serialize(&mut bytes, &node, Default::default()).ok();
+    serialize(&mut bytes, &SerializableHandle::from(node.clone()), Default::default()).ok();
     let content = String::from_utf8(bytes).unwrap_or_default();
 
     let mut text: String = String::new();
