@@ -58,9 +58,24 @@ pub fn fix_img_path(handle: Handle, url: &Url) -> bool {
         return false
     }
     let s = src.unwrap();
-    if !s.starts_with("//") && !s.starts_with("http://") && s.starts_with("https://") {
+    if !s.starts_with("//") && !s.starts_with("http://") && !s.starts_with("https://") {
         match url.join(&s) {
             Ok(new_url) => dom::set_attr("src", new_url.as_str(), handle),
+            Err(_)      => (),
+        }
+    }
+    true
+}
+
+pub fn fix_anchor_path(handle: Handle, url: &Url) -> bool {
+    let src = dom::get_attr("href", handle.clone());
+    if src.is_none() {
+        return false
+    }
+    let s = src.unwrap();
+    if !s.starts_with("//") && !s.starts_with("http://") && !s.starts_with("https://") {
+        match url.join(&s) {
+            Ok(new_url) => dom::set_attr("href", new_url.as_str(), handle),
             Err(_)      => (),
         }
     }
@@ -304,6 +319,7 @@ pub fn clean(mut dom: &mut RcDom, id: &Path, handle: Handle, url: &Url, candidat
                     useless = is_useless(id, handle.clone(), candidates)
                 },
                 "img" => useless = !fix_img_path(handle.clone(), url),
+                "a" => useless = !fix_anchor_path(handle.clone(), url),
                 _     => (),
             }
             dom::clean_attr("id"   , &mut *attrs.borrow_mut());
