@@ -41,8 +41,7 @@ pub fn scrape(url: &str) -> Result<Product, Error> {
 pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error> where R: Read {
     let mut dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
-        .read_from(input)
-        .unwrap();
+        .read_from(input)?;
     let mut title      = String::new();
     let mut candidates = BTreeMap::new();
     let mut nodes      = BTreeMap::new();
