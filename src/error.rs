@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::error;
+use std::io;
 #[cfg(feature = "reqwest")]
 use reqwest;
 use url;
@@ -10,6 +11,7 @@ pub enum Error {
     NetworkError(reqwest::Error),
     UrlParseError(url::ParseError),
     Unexpected,
+    IOError(io::Error)
 }
 
 impl Display for Error {
@@ -19,6 +21,7 @@ impl Display for Error {
             Error::NetworkError(ref e)   => write!(f, "NetworkError:  {}", e),
             Error::UrlParseError(ref e)  => write!(f, "UrlParseError:  {}", e),
             Error::Unexpected            => write!(f, "UnexpectedError"),
+            Error::IOError(ref e)        => write!(f, "InputOutputError: {}", e)
         }
     }
 }
@@ -26,6 +29,12 @@ impl Display for Error {
 impl From<url::ParseError> for Error {
     fn from(err: url::ParseError) -> Error {
         Error::UrlParseError(err)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::IOError(err)
     }
 }
 
