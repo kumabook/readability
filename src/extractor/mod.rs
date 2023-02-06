@@ -5,39 +5,41 @@ use crate::scorer::Candidate;
 use html5ever::tendril::stream::TendrilSink;
 use html5ever::{parse_document, serialize};
 use markup5ever_rcdom::{RcDom, SerializableHandle};
-#[cfg(feature = "reqwest")]
-use reqwest;
+
 use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::io::Read;
 use std::path::Path;
-#[cfg(feature = "reqwest")]
-use std::time::Duration;
+
 use url::Url;
 
+#[cfg(feature = "http-async")]
+#[cfg(not(feature = "http-blocking"))]
+mod client;
+
+#[cfg(feature = "http-async")]
+#[cfg(not(feature = "http-blocking"))]
+pub use client::scrape;
+
+#[cfg(feature = "http-blocking")]
+#[cfg(not(feature = "http-async"))]
+mod blocking_client;
+
+#[cfg(feature = "http-blocking")]
+#[cfg(not(feature = "http-async"))]
+pub use blocking_client::scrape;
+
 #[derive(Debug)]
-pub struct Product {
+pub struct ReadableHtmlPage {
     pub title: String,
     pub content: String,
     pub text: String,
 }
 
-#[cfg(feature = "reqwest")]
-pub fn scrape(url: &str) -> Result<Product, Error> {
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::new(30, 0))
-        .build()?;
-    let mut res = client.get(url).send()?;
-    if res.status().is_success() {
-        let url = Url::parse(url)?;
-        extract(&mut res, &url)
-    } else {
-        Err(Error::Unexpected)
-    }
-}
+static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-pub fn extract<R>(input: &mut R, url: &Url) -> Result<Product, Error>
+pub fn extract<R>(input: &mut R, url: &Url) -> Result<ReadableHtmlPage, Error>
 where
     R: Read,
 {
@@ -50,13 +52,7 @@ where
     let mut nodes = BTreeMap::new();
     let handle = dom.document.clone();
     scorer::preprocess(&mut dom, handle.clone(), &mut title);
-    scorer::find_candidates(
-        &mut dom,
-        Path::new("/"),
-        handle.clone(),
-        &mut candidates,
-        &mut nodes,
-    );
+    scorer::find_candidates(Path::new("/"), handle.clone(), &mut candidates, &mut nodes);
     let mut id: &str = "/";
     let mut top_candidate: &Candidate = &Candidate {
         node: handle,
@@ -86,7 +82,7 @@ where
 
     let mut text: String = String::new();
     dom::extract_text(node, &mut text, true);
-    Ok(Product {
+    Ok(ReadableHtmlPage {
         title,
         content,
         text,

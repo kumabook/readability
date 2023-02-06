@@ -6,7 +6,6 @@ use url::Url;
 
 #[test]
 fn test_extract_title() {
-    assert!(true);
     let mut file = File::open("./data/title.html").unwrap();
     let url = Url::parse("https://example.com").unwrap();
     let product = readability::extractor::extract(&mut file, &url).unwrap();
@@ -15,7 +14,6 @@ fn test_extract_title() {
 
 #[test]
 fn test_fix_rel_links() {
-    assert!(true);
     let mut file = File::open("./data/rel.html").unwrap();
     let url = Url::parse("https://example.com").unwrap();
     let product = readability::extractor::extract(&mut file, &url).unwrap();
@@ -24,7 +22,6 @@ fn test_fix_rel_links() {
 
 #[test]
 fn test_fix_img_links() {
-    assert!(true);
     let mut file = File::open("./data/img.html").unwrap();
     let url = Url::parse("https://example.com").unwrap();
     let product = readability::extractor::extract(&mut file, &url).unwrap();

@@ -16,8 +16,7 @@ use std::rc::Rc;
 use url::Url;
 
 pub static PUNCTUATIONS_REGEX: &str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
-pub static UNLIKELY_CANDIDATES: &str =
-    "combx|comment|community|disqus|extra|foot|header|menu\
+pub static UNLIKELY_CANDIDATES: &str = "combx|comment|community|disqus|extra|foot|header|menu\
      |remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate\
      |pagination|pager|popup|tweet|twitter\
      |ssba";
@@ -62,9 +61,8 @@ pub fn fix_img_path(handle: Handle, url: &Url) -> bool {
     }
     let s = src.unwrap();
     if !s.starts_with("//") && !s.starts_with("http://") && !s.starts_with("https://") {
-        match url.join(&s) {
-            Ok(new_url) => dom::set_attr("src", new_url.as_str(), handle),
-            Err(_) => (),
+        if let Ok(new_url) = url.join(&s) {
+            dom::set_attr("src", new_url.as_str(), handle)
         }
     }
     true
@@ -77,9 +75,8 @@ pub fn fix_anchor_path(handle: Handle, url: &Url) -> bool {
     }
     let s = src.unwrap();
     if !s.starts_with("//") && !s.starts_with("http://") && !s.starts_with("https://") {
-        match url.join(&s) {
-            Ok(new_url) => dom::set_attr("href", new_url.as_str(), handle),
-            Err(_) => (),
+        if let Ok(new_url) = url.join(&s) {
+            dom::set_attr("href", new_url.as_str(), handle)
         }
     }
     true
@@ -107,10 +104,9 @@ pub fn is_candidate(handle: Handle) -> bool {
     let n: &str = &dom::get_tag_name(handle.clone()).unwrap_or_default();
     match n {
         "p" => true,
-        "div" | "article" | "center" | "section" => !dom::has_nodes(
-            handle,
-            &BLOCK_CHILD_TAGS.to_vec(),
-        ),
+        "div" | "article" | "center" | "section" => {
+            !dom::has_nodes(handle, &BLOCK_CHILD_TAGS.to_vec())
+        }
         _ => false,
     }
 }
@@ -140,59 +136,61 @@ pub fn calc_content_score(handle: Handle) -> f32 {
 
 pub fn get_class_weight(handle: Handle) -> f32 {
     let mut weight: f32 = 0.0;
-    match handle.data {
-        Element {
-            name: _, ref attrs, ..
-        } => {
-            for name in ["id", "class"].iter() {
-                if let Some(val) = dom::attr(name, &attrs.borrow()) {
-                    if POSITIVE.is_match(&val) {
-                        weight += 25.0
-                    };
-                    if NEGATIVE.is_match(&val) {
-                        weight -= 25.0
-                    }
+    if let Element {
+        name: _, ref attrs, ..
+    } = handle.data
+    {
+        for name in ["id", "class"].iter() {
+            if let Some(val) = dom::attr(name, &attrs.borrow()) {
+                if POSITIVE.is_match(&val) {
+                    weight += 25.0
+                };
+                if NEGATIVE.is_match(&val) {
+                    weight -= 25.0
                 }
             }
         }
-        _ => (),
     };
     weight
 }
 
 pub fn preprocess(dom: &mut RcDom, handle: Handle, title: &mut String) -> bool {
-    match handle.data {
-        Element {
-            ref name,
-            ref attrs,
-            ..
-        } => {
-            let tag_name = name.local.as_ref();
-            match tag_name.to_lowercase().as_ref() {
-                "script" | "link" | "style" => return true,
-                "title" => dom::extract_text(handle.clone(), title, true),
-                _ => (),
+    if let Element {
+        ref name,
+        ref attrs,
+        ..
+    } = handle.data
+    {
+        let tag_name = name.local.as_ref();
+        match tag_name.to_lowercase().as_ref() {
+            "script" | "link" | "style" => return true,
+            "title" => {
+                if title.is_empty() {
+                    dom::extract_text(handle.clone(), title, true)
+                }
             }
-            for name in ["id", "class"].iter() {
-                if let Some(val) = dom::attr(name, &attrs.borrow()) {
-                    if tag_name != "body" && UNLIKELY.is_match(&val) && !LIKELY.is_match(&val) {
-                        return true;
-                    }
+            _ => (),
+        }
+
+        for name in ["id", "class"].iter() {
+            if let Some(val) = dom::attr(name, &attrs.borrow()) {
+                if tag_name != "body" && UNLIKELY.is_match(&val) && !LIKELY.is_match(&val) {
+                    return true;
                 }
             }
         }
-        _ => (),
     }
     let mut useless_nodes = vec![];
     let mut paragraph_nodes = vec![];
     let mut br_count = 0;
+
     for child in handle.children.borrow().iter() {
         if preprocess(dom, child.clone(), title) {
             useless_nodes.push(child.clone());
         }
         let c = child.clone();
-        match c.data {
-            Element { ref name, .. } => {
+        match &c.data {
+            Element { name, .. } => {
                 let tag_name = name.local.as_ref();
                 if "br" == tag_name.to_lowercase() {
                     br_count += 1
@@ -200,7 +198,7 @@ pub fn preprocess(dom: &mut RcDom, handle: Handle, title: &mut String) -> bool {
                     br_count = 0
                 }
             }
-            Text { ref contents } => {
+            Text { contents } => {
                 let s = contents.borrow();
                 if br_count >= 2 && !s.trim().is_empty() {
                     paragraph_nodes.push(child.clone());
@@ -210,27 +208,26 @@ pub fn preprocess(dom: &mut RcDom, handle: Handle, title: &mut String) -> bool {
             _ => (),
         }
     }
+
     for node in useless_nodes.iter() {
         dom.remove_from_parent(node);
     }
+
     for node in paragraph_nodes.iter() {
         let name = QualName::new(None, ns!(), LocalName::from("p"));
         let p = dom.create_element(name, vec![], ElementFlags::default());
         dom.append_before_sibling(node, NodeOrText::AppendNode(p.clone()));
         dom.remove_from_parent(node);
-        match node.clone().data {
-            Text { ref contents } => {
-                let text = contents.clone().into_inner().clone();
-                dom.append(&p, NodeOrText::AppendText(text))
-            }
-            _ => (),
+        if let Text { contents } = &node.data {
+            let text = contents.clone().into_inner().clone();
+            dom.append(&p, NodeOrText::AppendText(text))
         }
     }
+
     false
 }
 
 pub fn find_candidates(
-    dom: &mut RcDom,
     id: &Path,
     handle: Handle,
     candidates: &mut BTreeMap<String, Candidate>,
@@ -287,7 +284,6 @@ pub fn find_candidates(
 
     for (i, child) in handle.children.borrow().iter().enumerate() {
         find_candidates(
-            dom,
             id.join(i.to_string()).as_path(),
             child.clone(),
             candidates,
