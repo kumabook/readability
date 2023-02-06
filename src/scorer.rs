@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::path::Path;
 use std::cell::Cell;
 use std::collections::BTreeMap;
+use lazy_static::lazy_static;
 use url::Url;
 use regex::Regex;
 use html5ever::tree_builder::TreeSink;
@@ -15,9 +16,9 @@ use markup5ever_rcdom::NodeData::{
     ProcessingInstruction
 };
 use markup5ever_rcdom::RcDom;
-use html5ever::{QualName, LocalName};
+use html5ever::{QualName, LocalName, ns, namespace_url};
 use html5ever::tree_builder::{NodeOrText, ElementFlags};
-use dom;
+use crate::dom;
 
 pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
 pub static UNLIKELY_CANDIDATES: &'static str =

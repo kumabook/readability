@@ -11,10 +11,10 @@ use std::time::Duration;
 #[cfg(feature = "reqwest")]
 use reqwest;
 use url::Url;
-use error::Error;
-use dom;
-use scorer;
-use scorer::Candidate;
+use crate::error::Error;
+use crate::dom;
+use crate::scorer;
+use crate::scorer::Candidate;
 
 #[derive(Debug)]
 pub struct Product {
