@@ -1,24 +1,24 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::error;
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "http-async", feature = "http-blocking"))]
 use reqwest;
+use std::error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use url;
 
 #[derive(Debug)]
 pub enum Error {
-    #[cfg(feature = "reqwest")]
+    #[cfg(any(feature = "http-async", feature = "http-blocking"))]
     NetworkError(reqwest::Error),
     UrlParseError(url::ParseError),
-    Unexpected,
+    HttpError(reqwest::StatusCode),
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
-            #[cfg(feature = "reqwest")]
-            Error::NetworkError(ref e)   => write!(f, "NetworkError:  {}", e),
-            Error::UrlParseError(ref e)  => write!(f, "UrlParseError:  {}", e),
-            Error::Unexpected            => write!(f, "UnexpectedError"),
+            #[cfg(any(feature = "http-async", feature = "http-blocking"))]
+            Error::NetworkError(ref e) => write!(f, "NetworkError:  {e}"),
+            Error::UrlParseError(ref e) => write!(f, "UrlParseError:  {e}"),
+            Error::HttpError(status_code) => write!(f, "Http error, status: {status_code}"),
         }
     }
 }
@@ -29,7 +29,7 @@ impl From<url::ParseError> for Error {
     }
 }
 
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "http-async", feature = "http-blocking"))]
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
         Error::NetworkError(err)
@@ -37,5 +37,7 @@ impl From<reqwest::Error> for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str { "" }
+    fn description(&self) -> &str {
+        ""
+    }
 }

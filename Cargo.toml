@@ -1,5 +1,6 @@
 [package]
 name = "readability"
+edition = "2021"
 version = "0.2.0"
 authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
 license = "MIT"
@@ -12,14 +13,28 @@ categories = []
 [dependencies]
 regex = "1.4"
 url = "2.2"
-html5ever = "0.25"
-markup5ever_rcdom = "0.1"
+html5ever = "0.26.0"
+markup5ever_rcdom = "0.2.0"
 lazy_static = "1.4"
 
 [dependencies.reqwest]
 version = "0.11"
 optional = true
-features = ["blocking"]
 
 [features]
-default = ["reqwest"]
+default = ["http-async"]
+http-async = ["reqwest"]
+http-blocking = ["reqwest", "reqwest/blocking"]
+
+[dev-dependencies]
+tokio = {  version = "1.25.0", features = ["full"] }
+
+[[test]]
+required-features = ["http-blocking"]
+name = "blocking"
+path = "tests/blocking.rs"
+
+[[test]]
+required-features = ["http-async"]
+name = "async"
+path = "tests/async.rs"
