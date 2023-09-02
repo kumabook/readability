@@ -14,22 +14,22 @@ use std::path::Path;
 use std::rc::Rc;
 use url::Url;
 
-pub static PUNCTUATIONS_REGEX: &'static str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
-pub static UNLIKELY_CANDIDATES: &'static str =
+pub static PUNCTUATIONS_REGEX: &str = r"([、。，．！？]|\.[^A-Za-z0-9]|,[^0-9]|!|\?)";
+pub static UNLIKELY_CANDIDATES: &str =
     "combx|comment|community|disqus|extra|foot|header|menu\
      |remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate\
      |pagination|pager|popup|tweet|twitter\
      |ssba";
-pub static LIKELY_CANDIDATES: &'static str = "and|article|body|column|main|shadow\
+pub static LIKELY_CANDIDATES: &str = "and|article|body|column|main|shadow\
                                               |content|hentry";
-pub static POSITIVE_CANDIDATES: &'static str = "article|body|content|entry|hentry|main|page\
+pub static POSITIVE_CANDIDATES: &str = "article|body|content|entry|hentry|main|page\
      |pagination|post|text|blog|story";
-pub static NEGATIVE_CANDIDATES: &'static str = "combx|comment|com|contact|foot|footer|footnote\
+pub static NEGATIVE_CANDIDATES: &str = "combx|comment|com|contact|foot|footer|footnote\
      |masthead|media|meta|outbrain|promo|related\
      |scroll|shoutbox|sidebar|sponsor|shopping\
      |tags|tool|widget|form|textfield\
      |uiScale|hidden";
-static BLOCK_CHILD_TAGS: [&'static str; 10] = [
+static BLOCK_CHILD_TAGS: [&str; 10] = [
     "a",
     "blockquote",
     "dl",
@@ -108,7 +108,7 @@ pub fn is_candidate(handle: Handle) -> bool {
         "p" => true,
         "div" | "article" | "center" | "section" => !dom::has_nodes(
             handle.clone(),
-            &BLOCK_CHILD_TAGS.iter().map(|t| *t).collect(),
+            &BLOCK_CHILD_TAGS.to_vec(),
         ),
         _ => false,
     }
@@ -134,7 +134,7 @@ pub fn calc_content_score(handle: Handle) -> f32 {
     let mat = PUNCTUATIONS.find_iter(&text);
     score += mat.count() as f32;
     score += f32::min(f32::floor(text.chars().count() as f32 / 100.0), 3.0);
-    return score;
+    score
 }
 
 pub fn get_class_weight(handle: Handle) -> f32 {
@@ -159,7 +159,7 @@ pub fn get_class_weight(handle: Handle) -> f32 {
     weight
 }
 
-pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -> bool {
+pub fn preprocess(dom: &mut RcDom, handle: Handle, title: &mut String) -> bool {
     match handle.clone().data {
         Element {
             ref name,
@@ -169,15 +169,13 @@ pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -
             let tag_name = name.local.as_ref();
             match tag_name.to_lowercase().as_ref() {
                 "script" | "link" | "style" => return true,
-                "title" => dom::extract_text(handle.clone(), &mut title, true),
+                "title" => dom::extract_text(handle.clone(), title, true),
                 _ => (),
             }
             for name in ["id", "class"].iter() {
                 if let Some(val) = dom::attr(name, &attrs.borrow()) {
-                    if tag_name != "body" && UNLIKELY.is_match(&val) {
-                        if !LIKELY.is_match(&val) {
-                            return true;
-                        }
+                    if tag_name != "body" && UNLIKELY.is_match(&val) && !LIKELY.is_match(&val) {
+                        return true;
                     }
                 }
             }
@@ -188,7 +186,7 @@ pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -
     let mut paragraph_nodes = vec![];
     let mut br_count = 0;
     for child in handle.children.borrow().iter() {
-        if preprocess(&mut dom, child.clone(), &mut title) {
+        if preprocess(dom, child.clone(), title) {
             useless_nodes.push(child.clone());
         }
         let c = child.clone();
@@ -203,7 +201,7 @@ pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -
             }
             Text { ref contents } => {
                 let s = contents.borrow();
-                if br_count >= 2 && s.trim().len() > 0 {
+                if br_count >= 2 && !s.trim().is_empty() {
                     paragraph_nodes.push(child.clone());
                     br_count = 0
                 }
@@ -231,7 +229,7 @@ pub fn preprocess(mut dom: &mut RcDom, handle: Handle, mut title: &mut String) -
 }
 
 pub fn find_candidates(
-    mut dom: &mut RcDom,
+    dom: &mut RcDom,
     id: &Path,
     handle: Handle,
     candidates: &mut BTreeMap<String, Candidate>,
@@ -288,7 +286,7 @@ pub fn find_candidates(
 
     for (i, child) in handle.children.borrow().iter().enumerate() {
         find_candidates(
-            &mut dom,
+            dom,
             id.join(i.to_string()).as_path(),
             child.clone(),
             candidates,
@@ -320,7 +318,7 @@ fn find_or_create_candidate<'a>(
 }
 
 pub fn clean(
-    mut dom: &mut RcDom,
+    dom: &mut RcDom,
     id: &Path,
     handle: Handle,
     url: &Url,
@@ -332,7 +330,7 @@ pub fn clean(
         Doctype { .. } => (),
         Text { ref contents } => {
             let s = contents.borrow();
-            if s.trim().len() == 0 {
+            if s.trim().is_empty() {
                 useless = true
             }
         }
@@ -353,16 +351,16 @@ pub fn clean(
                 "a" => useless = !fix_anchor_path(handle.clone(), url),
                 _ => (),
             }
-            dom::clean_attr("id", &mut *attrs.borrow_mut());
-            dom::clean_attr("class", &mut *attrs.borrow_mut());
-            dom::clean_attr("style", &mut *attrs.borrow_mut());
+            dom::clean_attr("id", &mut attrs.borrow_mut());
+            dom::clean_attr("class", &mut attrs.borrow_mut());
+            dom::clean_attr("style", &mut attrs.borrow_mut());
         }
         ProcessingInstruction { .. } => unreachable!(),
     }
     let mut useless_nodes = vec![];
     for (i, child) in handle.children.borrow().iter().enumerate() {
         let pid = id.join(i.to_string());
-        if clean(&mut dom, pid.as_path(), child.clone(), url, candidates) {
+        if clean(dom, pid.as_path(), child.clone(), url, candidates) {
             useless_nodes.push(child.clone());
         }
     }
@@ -424,5 +422,5 @@ pub fn is_useless(id: &Path, handle: Handle, candidates: &BTreeMap<String, Candi
     if (embed_count == 1 && content_length < 35) || embed_count > 1 {
         return true;
     }
-    return false;
+    false
 }
