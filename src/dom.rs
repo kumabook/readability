@@ -21,7 +21,7 @@ pub fn get_attr(name: &str, handle: Handle) -> Option<String> {
     }
 }
 
-pub fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
+pub fn attr(attr_name: &str, attrs: &[Attribute]) -> Option<String> {
     for attr in attrs.iter() {
         if attr.name.local.as_ref() == attr_name {
             return Some(attr.value.to_string());
@@ -31,27 +31,22 @@ pub fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
 }
 
 pub fn set_attr(attr_name: &str, value: &str, handle: Handle) {
-    match handle.data {
-        Element {
-            name: _, ref attrs, ..
-        } => {
-            let attrs = &mut attrs.borrow_mut();
-            if let Some(index) = attrs.iter().position(|attr| {
-                let name = attr.name.local.as_ref();
-                name == attr_name
-            }) {
-                match StrTendril::from_str(value) {
-                    Ok(value) => {
-                        attrs[index] = Attribute {
-                            name: attrs[index].name.clone(),
-                            value,
-                        }
-                    }
-                    Err(_) => (),
+    if let Element {
+        name: _, ref attrs, ..
+    } = handle.data
+    {
+        let attrs = &mut attrs.borrow_mut();
+        if let Some(index) = attrs.iter().position(|attr| {
+            let name = attr.name.local.as_ref();
+            name == attr_name
+        }) {
+            if let Ok(value) = StrTendril::from_str(value) {
+                attrs[index] = Attribute {
+                    name: attrs[index].name.clone(),
+                    value,
                 }
             }
         }
-        _ => (),
     }
 }
 
@@ -87,10 +82,10 @@ pub fn is_empty(handle: Handle) -> bool {
             _ => (),
         }
     }
-    match get_tag_name(handle.clone()).unwrap_or_default().as_ref() {
-        "li" | "dt" | "dd" | "p" | "div" | "canvas" => true,
-        _ => false,
-    }
+    matches!(
+        get_tag_name(handle.clone()).unwrap_or_default().as_ref(),
+        "li" | "dt" | "dd" | "p" | "div" | "canvas"
+    )
 }
 
 pub fn has_link(handle: Handle) -> bool {
@@ -142,15 +137,12 @@ pub fn text_len(handle: Handle) -> usize {
 pub fn find_node(handle: Handle, tag_name: &str, nodes: &mut Vec<Rc<Node>>) {
     for child in handle.children.borrow().iter() {
         let c = child.clone();
-        match c.data {
-            Element { ref name, .. } => {
-                let t = name.local.as_ref();
-                if t.to_lowercase() == tag_name {
-                    nodes.push(child.clone());
-                };
-                find_node(child.clone(), tag_name, nodes)
-            }
-            _ => (),
+        if let Element { ref name, .. } = c.data {
+            let t = name.local.as_ref();
+            if t.to_lowercase() == tag_name {
+                nodes.push(child.clone());
+            };
+            find_node(child.clone(), tag_name, nodes)
         }
     }
 }
@@ -175,14 +167,11 @@ pub fn text_children_count(handle: Handle) -> usize {
     let mut count = 0;
     for child in handle.children.borrow().iter() {
         let c = child.clone();
-        match c.data {
-            Text { ref contents } => {
-                let s = contents.borrow();
-                if s.trim().len() >= 20 {
-                    count += 1
-                }
+        if let Text { ref contents } = c.data {
+            let s = contents.borrow();
+            if s.trim().len() >= 20 {
+                count += 1
             }
-            _ => (),
         }
     }
     count
