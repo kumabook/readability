@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::error;
 #[cfg(feature = "reqwest")]
 use reqwest;
+use std::error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use url;
 
 #[derive(Debug)]
@@ -16,9 +16,9 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
             #[cfg(feature = "reqwest")]
-            Error::NetworkError(ref e)   => write!(f, "NetworkError:  {}", e),
-            Error::UrlParseError(ref e)  => write!(f, "UrlParseError:  {}", e),
-            Error::Unexpected            => write!(f, "UnexpectedError"),
+            Error::NetworkError(ref e) => write!(f, "NetworkError:  {}", e),
+            Error::UrlParseError(ref e) => write!(f, "UrlParseError:  {}", e),
+            Error::Unexpected => write!(f, "UnexpectedError"),
         }
     }
 }
@@ -37,5 +37,7 @@ impl From<reqwest::Error> for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str { "" }
+    fn description(&self) -> &str {
+        ""
+    }
 }
