@@ -12,7 +12,7 @@ pub fn get_tag_name(handle: Handle) -> Option<String> {
     }
 }
 
-pub fn get_attr<'a>(name: &str, handle: Handle) -> Option<String> {
+pub fn get_attr(name: &str, handle: Handle) -> Option<String> {
     match handle.data {
         Element {
             name: _, ref attrs, ..
@@ -44,7 +44,7 @@ pub fn set_attr(attr_name: &str, value: &str, handle: Handle) {
                     Ok(value) => {
                         attrs[index] = Attribute {
                             name: attrs[index].name.clone(),
-                            value: value,
+                            value,
                         }
                     }
                     Err(_) => (),
@@ -102,7 +102,7 @@ pub fn has_link(handle: Handle) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 pub fn extract_text(handle: Handle, text: &mut String, deep: bool) {
@@ -168,7 +168,7 @@ pub fn has_nodes(handle: Handle, tag_names: &Vec<&'static str>) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 pub fn text_children_count(handle: Handle) -> usize {

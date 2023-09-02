@@ -87,8 +87,8 @@ where
     let mut text: String = String::new();
     dom::extract_text(node.clone(), &mut text, true);
     Ok(Product {
-        title: title,
-        content: content,
-        text: text,
+        title,
+        content,
+        text,
     })
 }
