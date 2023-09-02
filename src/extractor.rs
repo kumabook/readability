@@ -50,13 +50,7 @@ where
     let mut nodes = BTreeMap::new();
     let handle = dom.document.clone();
     scorer::preprocess(&mut dom, handle.clone(), &mut title);
-    scorer::find_candidates(
-        &mut dom,
-        Path::new("/"),
-        handle.clone(),
-        &mut candidates,
-        &mut nodes,
-    );
+    scorer::find_candidates(Path::new("/"), handle.clone(), &mut candidates, &mut nodes);
     let mut id: &str = "/";
     let mut top_candidate: &Candidate = &Candidate {
         node: handle.clone(),
